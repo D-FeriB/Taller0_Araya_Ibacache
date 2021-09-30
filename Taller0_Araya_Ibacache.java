@@ -7,6 +7,7 @@ package taller0_araya_ibacache;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -18,10 +19,9 @@ public class Taller0_Araya_Ibacache {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         
         //extras
-        String [] nombresJornadas = new String[]{"MaÃ±ana","Tarde"};
         String [] nombreAJornadas = new String[]{"M","T"};
         
         //clientes
@@ -53,13 +53,66 @@ public class Taller0_Araya_Ibacache {
         int [][] sala3M = new int[10][30];
         int [][] sala3T = new int[10][30];
         rellenarMatriz(sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
-        
-        
+        System.out.println(mostrarMatrizAsientos(sala2M, "2", "M"));
         
         //Lectura
         int cantidadClientes = lecturaDatosClientes(nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC);
-        int cantidadPeliculas = lecturaDatosPeliculas(nombreAJornadas,nombresP,tiposP,recaudacionP,sala1,sala2,sala3);
+        //int cantidadPeliculas = lecturaDatosPeliculas(nombreAJornadas,nombresP,tiposP,recaudacionP,sala1,sala2,sala3);
+        int cantidadPeliculas = leerDatosPeliculas(nombresP, tiposP, recaudacionP, sala1,sala2, sala3);
         menuPrincipal(cantidadPeliculas,nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC,cantidadClientes,nombreAJornadas,nombresP,tiposP,recaudacionP,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
+    }
+    
+    private static String mostrarMatriz(int[][] matriz, String sala, String horario) {
+        String text = "";
+        text += "SALA "+sala+" - "+horario+"\n\n";
+        for (int fila = 0; fila < matriz.length; fila++){
+          for (int columna = 0; columna < matriz[fila].length; columna++){
+                if (matriz[fila][columna] == 0 || matriz[fila][columna] == 1 ) {
+                        text += matriz[fila][columna]+"  ";
+                } else {
+                        text += matriz[fila][columna]+" ";
+                }
+          }
+          text += "\n";
+        }
+
+        return text;
+    }
+    
+    private static String mostrarMatrizAsientos(int[][] matriz, String sala, String horario) {
+        String[] filas = new String[]{"A","B","C","D","E","F","G","H","I","J"};
+        String text = "";
+        text += "SALA "+sala+" - "+horario+"\n\n";
+        String text2="     ";
+        for (int i = 0; i < 30; i++) {
+            if (i<=8){
+                text2+= (i+1)+"  ";
+            }
+            else{
+                text2+= (i+1)+" ";
+            }
+        }
+        text+=text2+"\n\n";
+        text+=filas[0]+"    ";
+        for (int fila = 0; fila < matriz.length; fila++){
+            
+          for (int columna = 0; columna < matriz[fila].length; columna++){
+                if (matriz[fila][columna] == 0 || matriz[fila][columna] == 1 ) {
+                        text += matriz[fila][columna]+"  ";
+                } else {
+                        text += matriz[fila][columna]+" ";
+                }
+          }
+          if (fila==matriz.length-1){
+              text += "\n ";
+          }
+          else{
+              text += "\n"+filas[fila+1]+"    ";
+          }
+          
+        }
+
+        return text;
     }
     
     /**
@@ -114,7 +167,8 @@ public class Taller0_Araya_Ibacache {
             String linea = scan1.nextLine();
             String [] partes = linea.split(",");
             String rut = partes[0];
-            int pos = buscarRut(rutsC,rut);
+            String rutFormateado = formatearRut(rut);
+            int pos = buscarRut(rutsC,rutFormateado,i);
             if (pos != -1){
                 if (partes[1].equals("HABILITADO")){
                     estadosC[pos]=1;
@@ -133,57 +187,61 @@ public class Taller0_Araya_Ibacache {
      * @param rut
      * @return 
      */
-    private static int buscarRut(String[] rutsC, String rut) {
-        for (int i = 0; i < rutsC.length; i++) {
+    private static int buscarRut(String[] rutsC, String rut, int cantidadClientes) {
+        for (int i = 0; i < cantidadClientes; i++) {
             if (rutsC[i].equals(rut)){
                 return i;
             }
         }
         return -1;
     }
-    /**
-     * This method reads the file peliculas and fill the vectors related to movies and movie rooms
-     * @param nombreAJornadas
-     * @param nombresP
-     * @param tiposP
-     * @param recaudacionP
-     * @param sala1
-     * @param sala2
-     * @param sala3
-     * @throws FileNotFoundException 
-     */
-    private static int lecturaDatosPeliculas(String[] nombreAJornadas,String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3) throws FileNotFoundException {
-        Scanner scan = new Scanner(new File("peliculas.txt"));
-        int i = 0;
-        while(scan.hasNext()){
-            String linea = scan.nextLine();
-            String[] partes = linea.split(",");
-            nombresP[i]=partes[0];
-            tiposP[i]=partes[1];
-            recaudacionP[i] = Integer.parseInt(partes[2]);
-            for (int j = 3; j < partes.length; j+=2) {
-                int sala = Integer.parseInt(partes[j]);
-                String horario = partes[j+1];
-                int pos = buscarJornada(nombreAJornadas,horario);
-                if (sala == 1){
-                    //sala1
-                    sala1[i][pos] = 1;
-                }
-                else{
-                    if (sala == 2){
-                        //sala 2
-                        sala2[i][pos] = 1;
-                    }
-                    else{
-                        //sala 3
-                        sala3[i][pos] = 1;
-                    }
-                }
-                i++;
-            }
-        }
-        return i;
-    }
+
+    
+    private static int leerDatosPeliculas(String[] nombreP, String[] tipoP, int[] recaudadoP, int[][] sala1,
+			int[][] sala2, int[][] sala3) throws IOException{
+		int contador = 0;
+		int columna;
+		File file = new File("peliculas.txt");
+		Scanner scan = new Scanner(file);
+		while (scan.hasNextLine()) {
+			String linea = scan.nextLine();
+			String [] partes = linea.split(",");
+			nombreP[contador] = partes[0];
+            tipoP[contador] = partes[1];
+            recaudadoP[contador] = Integer.parseInt(partes[2]);
+            for (int i = 3; i < partes.length; i+= 2) {
+            	String horario = partes[i+1];
+            	if (horario.equalsIgnoreCase("M")) {
+            		//mañana
+            		columna = 0;
+				}
+            	else {
+            		//tarde
+					columna = 1;
+				}
+            	int numSala = Integer.parseInt(partes[i]);
+            	if (numSala == 1) {
+            		//sala1
+					sala1[contador][columna] = 1;
+				}else {
+					//sala2
+					if (numSala == 2) {
+						sala2[contador][columna] = 1;
+					} else {
+						//sala3
+						sala3[contador][columna] = 1;
+					}
+				}
+			}
+            contador ++;
+		}
+		scan.close();
+		System.out.println(mostrarMatriz(sala1, "1", "CARTELERA"));
+		System.out.println(mostrarMatriz(sala2, "2", "CARTELERA"));
+		System.out.println(mostrarMatriz(sala3, "3", "CARTELERA"));
+		return contador;
+	}
+    
     /**
      * This method returns the schedule index value on schedule vector names 
      * @param nombreAJornadas
@@ -257,7 +315,7 @@ public class Taller0_Araya_Ibacache {
      * @param claves
      * @return 
      */
-    private static String[] login(String[] ruts, String[] claves){
+    private static String[] login(String[] ruts, String[] claves, int cantidadClientes){
        Scanner scan = new Scanner(System.in);
         System.out.println("--LogIn--");
         System.out.println("Ingrese rut: ");
@@ -269,7 +327,7 @@ public class Taller0_Araya_Ibacache {
             return new String[]{"2"};
         }
         else{
-            int pos = buscarRut(ruts, rutReal);
+            int pos = buscarRut(ruts, rutReal,cantidadClientes);
             if (pos==-1){
                 //Usuario no existe
                 //Dar opcion de registro, relogueo o de salir del sistema.
@@ -281,7 +339,7 @@ public class Taller0_Araya_Ibacache {
                     return new String[]{"1",rut};
                 }
                 else{
-                    //ContraseÃ±a erronea, volver a logear
+                    //Contraseña erronea, volver a logear
                     return new String[]{"-2"};
                 }
             }
@@ -291,11 +349,11 @@ public class Taller0_Araya_Ibacache {
     private static void menuPrincipal(int cantidadPeliculas,String[] nombresC, String[] apellidosC, String[] rutsC, String[] clavesC, int[] saldosC, int[] estadosC, int cantidadClientes, String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) {
         System.out.println("Bienvenido!");
         Scanner scan = new Scanner(System.in);
-        String[] credenciales = login(rutsC, clavesC);
+        String[] credenciales = login(rutsC, clavesC,cantidadClientes);
         while (!credenciales[0].equals("1") && !credenciales[0].equals("2")){
             if (credenciales[0].equals("-1")){
                 System.out.println("El rut ingresado no existe en el sistema");
-                System.out.println("Â¿Desea registrarse? [Y/N]");
+                System.out.println("¿Desea registrarse? [Y/N]");
                 String opcion = scan.nextLine();
                 if (opcion.equals("Y")){
                     cantidadClientes = registro(cantidadClientes, nombresC, apellidosC, rutsC, clavesC, saldosC, estadosC);
@@ -303,18 +361,18 @@ public class Taller0_Araya_Ibacache {
             }
             else{
                 System.out.println("Clave incorrecta");
-                System.out.println("Â¿Desea reloguear o salir del sistema? [R/S]");
+                System.out.println("¿Desea reloguear o salir del sistema? [R/S]");
                 String opcion = scan.nextLine();
                 if (opcion.equals("S")){
                     System.out.println("Adios!");
                     System.exit(0);
                 }
             }
-            credenciales = login(rutsC, clavesC);
+            credenciales = login(rutsC, clavesC,cantidadClientes);
         }
         if (credenciales[0].equals("1")){
-            String rutCliente = credenciales[1];
-            int pos = buscarRut(rutsC, rutCliente);
+            String rutCliente = formatearRut(credenciales[1]);
+            int pos = buscarRut(rutsC,rutCliente,cantidadClientes);
             String[] peliculasDelCliente = new String[1000];
             String[] horarioDelCliente = new String[1000];
             String[] asientosDelCliente = new String[1000];
@@ -322,13 +380,14 @@ public class Taller0_Araya_Ibacache {
             menuUsuario(cantidadPeliculas,cantidadClientes,rutCliente,pos,nombresC,apellidosC,saldosC,estadosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados,nombreAJornadas, nombresP, tiposP, recaudacionP, sala1, sala2, sala3,sala1M,sala1T, sala2M,sala2T,sala3M, sala3T);
         }
         else{
-            menuAdmin();
+            /*menuAdmin();*/
         }
     }
 
     private static void menuUsuario(int cantidadPeliculas,int cantidadClientes, String rutCliente, int pos, String[] nombresC, String[] apellidosC, int[] saldosC, int[] estadosC, String[] peliculasDelCliente, String[] horarioDelCliente, String[] asientosDelCliente, int cantidadAsientosComprados,String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) {
         Scanner scan = new Scanner(System.in);
         despliegueMenuUsuario();
+        System.out.println("Elija una opción: ");
         String opcion = scan.nextLine();
         while(!opcion.equals("5")){
             if (opcion.equals("1")){
@@ -346,10 +405,13 @@ public class Taller0_Araya_Ibacache {
                     if (exito){
                         System.out.println("Ingrese cantidad de entradas: ");
                         int cantEntradas = Integer.parseInt(scan.nextLine());
-                        int aPagar = cantEntradas*valorEntrada(posPelicula,tiposP);
+                        int aPagar = (cantEntradas*valorEntrada(posPelicula,tiposP));
+                        if (estadosC[pos]==1){
+                            aPagar *= 0.85;
+                        }
                         if(aPagar>saldosC[pos]){
-                            System.out.println("No puede comprar esa cantidad de entradas en esta pelÃ­cula.");
-                            System.out.println("Â¿Desea agregar saldo? [Y/N]");
+                            System.out.println("No puede comprar esa cantidad de entradas en esta película.");
+                            System.out.println("¿Desea agregar saldo? [Y/N]");
                             String respuesta = scan.nextLine();
                             if (respuesta.equals("Y")){
                                 agregarSaldo(pos,saldosC);
@@ -358,7 +420,7 @@ public class Taller0_Araya_Ibacache {
                         else{
                             String[] letras = new String[cantEntradas];
                             int [] numeros = new int[cantEntradas];
-                            desplegarAsientosDisponibles(sala,sala1,sala2,sala3);
+                            desplegarAsientosDisponibles(sala,jornada,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
                             int exitos = 0;
                             for (int i = 0; i < cantEntradas; i++) {
                                 System.out.println("Ingrese letra del asiento: ");
@@ -370,11 +432,14 @@ public class Taller0_Araya_Ibacache {
                                 exitos++;
                             }
                             if (comprarBoleto(letras,numeros,nombreAJornadas,jornada,posPelicula,sala,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T,peliculasDelCliente,horarioDelCliente,asientosDelCliente, recaudacionP)){
-                                System.out.println("Â¿EstÃ¡ seguro que desea realizar la compra? [Y/N]");
+                                System.out.println("Su saldo es: $"+saldosC[pos]);
+                                System.out.println("El precio por la compra será: $"+aPagar);
+                                System.out.println("¿Está seguro que desea realizar la compra? [Y/N]");
                                 String comprar = scan.nextLine();
                                 if (comprar.equals("Y")){
                                     realizarCompra(nombresP,cantidadAsientosComprados,letras,numeros,nombreAJornadas,jornada,posPelicula,sala,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T,peliculasDelCliente,horarioDelCliente,asientosDelCliente, recaudacionP);
                                     cantidadAsientosComprados+=cantEntradas;
+                                    recaudacionP[posPelicula]+=aPagar;
                                     saldosC[pos]-=aPagar;
                                 }
                                 else{
@@ -382,43 +447,54 @@ public class Taller0_Araya_Ibacache {
                                 }
                             }
                             else{
-                                System.out.println("Alguno de los datos de su compra no ha sido ingresado correctamente.");
+                                System.out.println("No se pudo comprar el boleto ya que el asiento no se encuentra disponible.");
                             }
                         }
                     }
                     else{
-                        System.out.println("La funciÃ³n no existe.");
+                        System.out.println("La función no existe.");
                     }
                 }
                 else{
-                    System.out.println("La pelÃ­cula no existe.");
+                    System.out.println("La película no existe.");
                 }
             }
             if (opcion.equals("2")){
-                //InformaciÃ³n de usuario
+                //Información de usuario
                 desplegarInfoUsuario(pos,rutCliente,nombresC,apellidosC,saldosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados);
             }
             if (opcion.equals("3")){
-                //Entradas del usuario
+                //Devolución de entradas
+                int movilidad = estadosC[pos];
                 System.out.println("Entradas de: "+rutCliente);
                 System.out.println("Usted posee "+cantidadAsientosComprados+" asientos.");
                 desplegarEntradasUsuario(rutCliente,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados);
                 System.out.println("Ingrese la cantidad de asientos a reembolsar: ");
                 int cantAsientos = Integer.parseInt(scan.nextLine());
-                if (cantAsientos == cantidadAsientosComprados){
-                    horarioDelCliente = new String[cantidadAsientosComprados];
-                    asientosDelCliente = new String[cantidadAsientosComprados];
-                    peliculasDelCliente = new String[cantidadAsientosComprados];
-                    
-                }
-                else{
-                    System.out.println("Cantidad de asientos no vÃ¡lida.");
+                for (int i = 0; i < cantAsientos; i++) {
+                    System.out.println("Ingrese el nombre de la película: ");
+                    String pelicula = scan.nextLine();
+                    System.out.println("Ingrese la jornada de la función: ");
+                    String jornada = scan.nextLine();
+                    System.out.println("Ingrese número de sala de la función: ");
+                    int sala = Integer.parseInt(scan.nextLine()); 
+                    System.out.println("Ingrese la letra del asiento a devolver: ");
+                    String letra = scan.nextLine();
+                    System.out.println("Ingrese el número del asiento a devolver: ");
+                    int numero = Integer.parseInt(scan.nextLine());
+                    int exito = devolverBoleto(pos,saldosC,cantidadPeliculas,pelicula,jornada,sala,letra,numero,peliculasDelCliente,asientosDelCliente,horarioDelCliente,nombresP,cantidadAsientosComprados,recaudacionP,tiposP,movilidad,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T,nombreAJornadas);
+                    if (exito!=-1){
+                        //cantidadAsientosComprados--;
+                    }
+                        
                 }
             }
             if (opcion.equals("4")){
                 desplegarPeliculas(cantidadPeliculas, nombresP, tiposP, sala1, sala2, sala3, nombreAJornadas);
             }
             despliegueMenuUsuario();
+            System.out.println("Elija una opción nuevamente: ");
+            opcion = scan.nextLine();
         }
     }
     /**
@@ -427,8 +503,8 @@ public class Taller0_Araya_Ibacache {
     private static void despliegueMenuUsuario(){
         System.out.println("Menu Usuario");
         System.out.println("[1] Comprar entrada");
-        System.out.println("[2] InformaciÃ³n usuario");
-        System.out.println("[3] DevoluciÃ³n entrada");
+        System.out.println("[2] Información usuario");
+        System.out.println("[3] Devolución entrada");
         System.out.println("[4] Cartelera");
         System.out.println("[5] Salir");
     }
@@ -473,7 +549,7 @@ public class Taller0_Araya_Ibacache {
      */
     private static int buscarPelicula(String[] nombresP, String pelicula, int cantidadPeliculas) {
         for (int i = 0; i < cantidadPeliculas; i++) {
-            if (nombresP.equals(pelicula)){
+            if (nombresP[i].equals(pelicula)){
                 return i;
             }
         }
@@ -515,33 +591,30 @@ public class Taller0_Araya_Ibacache {
      * @param sala2
      * @param sala3 
      */
-    private static void desplegarAsientosDisponibles(int sala, int[][] sala1, int[][] sala2, int[][] sala3) {
+    private static void desplegarAsientosDisponibles(int sala, String jornada, int[][] sala1M, int[][] sala1T , int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) {
         String[] filas = new String[]{"A","B","C","D","E","F","G","H","I","J"};
         int[][] matriz = null;
-        if (sala==1){
-            matriz = sala1;
+        if (sala==1 && jornada.equals("M")){
+            matriz = sala1M;
         }
-        else{
-            if (sala==2){
-                matriz = sala2;
-            }
-            else{
-                matriz = sala3;
-            }
+        if (sala==1 && jornada.equals("T")){
+            matriz = sala1T;
         }
-        for (int i = 0; i < 10; i++) {
-            for (int j = 0; j < 30; j++) {
-                if (matriz[i][j]==1){
-                    System.out.println(filas[i]+""+(j+1)+": Ocupado");
-                }
-                if (matriz[i][j]==0){
-                    System.out.println(filas[i]+""+(j+1)+": Disponible");
-                }
-                if (matriz[i][j]==-1){
-                    System.out.println(filas[i]+""+(j+1)+": Restringido");
-                }
-            }
+        if (sala==2 && jornada.equals("M")){
+            matriz = sala2M;
         }
+        if (sala==2 && jornada.equals("T")){
+            matriz = sala2T;
+        }
+        if (sala==3 && jornada.equals("M")){
+            matriz = sala3M;
+        }
+        if (sala==3 && jornada.equals("T")){
+            matriz = sala3T;
+        }
+        System.out.println(mostrarMatrizAsientos(matriz, Integer.toString(sala), jornada));
+        
+        
     }
     /**
      * return the value of the ticket
@@ -550,7 +623,7 @@ public class Taller0_Araya_Ibacache {
      * @return 
      */
     private static int valorEntrada(int posPelicula, String[] tiposP) {
-        if (tiposP[posPelicula].equals("estreno")){
+        if (tiposP[posPelicula].equals("Estreno")){
             return 5500;
         }
         else{
@@ -701,14 +774,34 @@ public class Taller0_Araya_Ibacache {
             int fila = buscarFila(letras[i]);
             asientosDelCliente[asientosCOmprados+i]=asiento;
             peliculasDelCliente[asientosCOmprados+i]=peliculas[posPelicula];
-            horarioDelCliente[asientosCOmprados+i]=jornada;
-            matriz[fila][numeros[i]-1] = 1;//ocupada
-            if ((numeros[i]-1-1)<0){
-                matriz[fila][numeros[i]-2]=-1;//no disponible
+            horarioDelCliente[asientosCOmprados+i]="Sala "+sala+" "+jornada;
+            int columnaAsiento = numeros[i]-1;
+            if (matriz[fila][columnaAsiento] == 0){
+                System.out.println("Compraste el asiento "+letras[i]+""+numeros[i]);
+                matriz[fila][columnaAsiento] = 1;
+                if (columnaAsiento-1>=0){
+                    if (matriz[fila][columnaAsiento-1]!=-2){
+                        matriz[fila][columnaAsiento-1] = -1;
+                    }
+                }
+                if (columnaAsiento+1<=29){
+                    if (matriz[fila][columnaAsiento+1]!=-2){
+                        matriz[fila][columnaAsiento+1] = -1;
+                    }
+                }
             }
-            if ((numeros[i]-1+1)>29){
-                matriz[fila][numeros[i]]=-1;//no disponible
+            else{
+                if (matriz[fila][columnaAsiento]==-2){
+                    System.out.println("No existe el asiento "+asiento);
+                }
+                if (matriz[fila][columnaAsiento]==-1){
+                    System.out.println("El asiento "+asiento+" está restringido por distanciamiento");
+                }
+                if (matriz[fila][columnaAsiento]==1){
+                    System.out.println("Asiento "+asiento+" ocupado");
+                }
             }
+            
         }
     }
 
@@ -730,8 +823,110 @@ public class Taller0_Araya_Ibacache {
             System.out.println("No tiene asientos comprados.");
         }
     }
-    
-    
 
+    private static int devolverBoleto(int pos, int[] saldoC,int cantidadPeliculas, String pelicula, String jornada, int sala, String letra, int numero, String[] peliculasDelCliente, String[] asientosDelCliente, String[] horarioDelCliente, String[] nombresP, int cantidadAsientosComprados, int[] recaudacionP, String[] tiposP, int movilidad, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T, String[] nombreAJornadas) {
+        int indexPelicula = buscarPelicula(nombresP, pelicula, cantidadPeliculas);
+        if (indexPelicula!=-1){
+            int indexJornada = buscarJornada(nombreAJornadas, jornada);
+            if (indexJornada!=-1){
+                int[][] matriz = null;
+                if (sala == 1){
+                    if (indexJornada==0){
+                        matriz = sala1M;
+                    }
+                    else{
+                        matriz = sala1T;
+                    }
+                }
+                else{
+                    if (sala == 2){
+                        if (indexJornada == 0){
+                           matriz = sala2M;
+                        }
+                        else{
+                            matriz = sala2T;
+                        }
+                    }
+                    else{
+                        if (indexJornada == 0){
+                            matriz = sala3M;
+                        }
+                        else{
+                            matriz = sala3T;
+                        }
+                    }
+                }
+                int fila = buscarFila(letra);
+                int columna = numero-1;
+                if (fila!=-1 && columna!=-1){
+                    matriz[fila][columna]=0;
+                    if (columna-1>=0){
+                        if (columna-2>=0){
+                            if (matriz[fila][columna-2]==1){
+                            }
+                            else{
+                                if (matriz[fila][columna-1]!=-2){
+                                    matriz[fila][columna-1] = 0;
+                                }
+                            }
+                        }
+                    }
+                    if (columna+1<=29){
+                        if (columna+2<=29){
+                            if (matriz[fila][columna+2]==1){
+                                
+                            }
+                            else{
+                                if (matriz[fila][columna+1]!=-2){
+                                    matriz[fila][columna+1] = 0;
+                                }
+                            }
+                        }
+                    }
+                    if (movilidad==1){
+                        double aDevolver = ((valorEntrada(indexPelicula,tiposP))*0.85)*0.8;
+                        recaudacionP[indexPelicula] -= aDevolver;
+                        saldoC[pos]+=aDevolver;
+                    }    
+                    else{
+                        double aDevolver = (valorEntrada(indexPelicula,tiposP))*0.8;
+                        recaudacionP[indexPelicula] -= aDevolver;
+                        saldoC[pos]+=aDevolver;
+                    }
+                    
+                    return (cantidadAsientosComprados--);
+                }
+            }
+            else{
+                return -1;
+            }
+        }
+        else{
+            return -1;
+        }
+        return -1;
+    }
+    
+    public static int eliminarDeLista(String aeliminar,String[] lista, int cantidad,String[] peliculasDelCliente, String[] asientosDelCliente, String[] horarioDelCliente){
+	int i; 
+	for(i=0; i< cantidad; i++){
+            if(lista[i]!=null) {
+                if (lista[i].equals(aeliminar)){
+                    break;
+                }
+            }
+	}
+	if(i == cantidad){
+            return -1;
+	}
+	else { 
+            for(int j=i; j<cantidad - 1;j++){
+                    lista[j] = lista[j+1]; 
+            }
+            cantidad--;
+            return cantidad;
+	}
 }
 
+}  
+  
