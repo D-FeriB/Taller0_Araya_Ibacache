@@ -7,7 +7,9 @@ package taller0_araya_ibacache;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 /**
@@ -58,8 +60,8 @@ public class Taller0_Araya_Ibacache {
         //Lectura
         int cantidadClientes = lecturaDatosClientes(nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC);
         //int cantidadPeliculas = lecturaDatosPeliculas(nombreAJornadas,nombresP,tiposP,recaudacionP,sala1,sala2,sala3);
-        int cantidadPeliculas = leerDatosPeliculas(nombresP, tiposP, recaudacionP, sala1,sala2, sala3);
-        menuPrincipal(cantidadPeliculas,nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC,cantidadClientes,nombreAJornadas,nombresP,tiposP,recaudacionP,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
+        int cantidadPeliculas = leerDatosPeliculas(nombresP,recaudacionPDiaria, tiposP, recaudacionP, sala1,sala2, sala3);
+        menuPrincipal(recaudacionP,cantidadPeliculas,nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC,cantidadClientes,nombreAJornadas,nombresP,tiposP,recaudacionP,recaudacionPDiaria,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
     }
     
     private static String mostrarMatriz(int[][] matriz, String sala, String horario) {
@@ -197,50 +199,49 @@ public class Taller0_Araya_Ibacache {
     }
 
     
-    private static int leerDatosPeliculas(String[] nombreP, String[] tipoP, int[] recaudadoP, int[][] sala1,
-			int[][] sala2, int[][] sala3) throws IOException{
-		int contador = 0;
-		int columna;
-		File file = new File("peliculas.txt");
-		Scanner scan = new Scanner(file);
-		while (scan.hasNextLine()) {
-			String linea = scan.nextLine();
-			String [] partes = linea.split(",");
-			nombreP[contador] = partes[0];
+    private static int leerDatosPeliculas(String[] nombreP,int [] recaudacionPDiaria, String[] tipoP, int[] recaudadoP, int[][] sala1, int[][] sala2, int[][] sala3) throws IOException{
+        int contador = 0;
+        int columna;
+        File file = new File("peliculas.txt");
+        Scanner scan = new Scanner(file);
+        while (scan.hasNextLine()) {
+            String linea = scan.nextLine();
+            String [] partes = linea.split(",");
+            nombreP[contador] = partes[0];
             tipoP[contador] = partes[1];
             recaudadoP[contador] = Integer.parseInt(partes[2]);
             for (int i = 3; i < partes.length; i+= 2) {
             	String horario = partes[i+1];
             	if (horario.equalsIgnoreCase("M")) {
-            		//mañana
-            		columna = 0;
-				}
+                    //mañana
+                    columna = 0;
+                    }
             	else {
-            		//tarde
-					columna = 1;
-				}
+                    //tarde
+                    columna = 1;
+                }
             	int numSala = Integer.parseInt(partes[i]);
             	if (numSala == 1) {
-            		//sala1
-					sala1[contador][columna] = 1;
-				}else {
-					//sala2
-					if (numSala == 2) {
-						sala2[contador][columna] = 1;
-					} else {
-						//sala3
-						sala3[contador][columna] = 1;
-					}
-				}
-			}
+                     //sala1
+                    sala1[contador][columna] = 1;
+                }else {
+                    //sala2
+                    if (numSala == 2) {
+                            sala2[contador][columna] = 1;
+                    } else {
+                            //sala3
+                            sala3[contador][columna] = 1;
+                    }
+                }
+            }
             contador ++;
-		}
-		scan.close();
-		System.out.println(mostrarMatriz(sala1, "1", "CARTELERA"));
-		System.out.println(mostrarMatriz(sala2, "2", "CARTELERA"));
-		System.out.println(mostrarMatriz(sala3, "3", "CARTELERA"));
-		return contador;
-	}
+        }
+        scan.close();
+        System.out.println(mostrarMatriz(sala1, "1", "CARTELERA"));
+        System.out.println(mostrarMatriz(sala2, "2", "CARTELERA"));
+        System.out.println(mostrarMatriz(sala3, "3", "CARTELERA"));
+        return contador;
+    }
     
     /**
      * This method returns the schedule index value on schedule vector names 
@@ -346,9 +347,13 @@ public class Taller0_Araya_Ibacache {
         }
     }
 
-    private static void menuPrincipal(int cantidadPeliculas,String[] nombresC, String[] apellidosC, String[] rutsC, String[] clavesC, int[] saldosC, int[] estadosC, int cantidadClientes, String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) {
+    private static void menuPrincipal(int[] recaP,int cantidadPeliculas,String[] nombresC, String[] apellidosC, String[] rutsC, String[] clavesC, int[] saldosC, int[] estadosC, int cantidadClientes, String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int [] recaudacionPDiaria, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) throws IOException {
         System.out.println("Bienvenido!");
         Scanner scan = new Scanner(System.in);
+        String[] peliculasDelCliente = new String[1000];
+        String[] horarioDelCliente = new String[1000];
+        String[] asientosDelCliente = new String[1000];
+        int cantidadAsientosComprados = 0;
         String[] credenciales = login(rutsC, clavesC,cantidadClientes);
         while (!credenciales[0].equals("1") && !credenciales[0].equals("2")){
             if (credenciales[0].equals("-1")){
@@ -373,18 +378,16 @@ public class Taller0_Araya_Ibacache {
         if (credenciales[0].equals("1")){
             String rutCliente = formatearRut(credenciales[1]);
             int pos = buscarRut(rutsC,rutCliente,cantidadClientes);
-            String[] peliculasDelCliente = new String[1000];
-            String[] horarioDelCliente = new String[1000];
-            String[] asientosDelCliente = new String[1000];
-            int cantidadAsientosComprados = 0;
-            menuUsuario(cantidadPeliculas,cantidadClientes,rutCliente,pos,nombresC,apellidosC,saldosC,estadosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados,nombreAJornadas, nombresP, tiposP, recaudacionP, sala1, sala2, sala3,sala1M,sala1T, sala2M,sala2T,sala3M, sala3T);
+            
+            
+            menuUsuario(clavesC,recaP,rutsC,cantidadPeliculas,cantidadClientes,rutCliente,pos,nombresC,apellidosC,saldosC,estadosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados,nombreAJornadas, nombresP, tiposP, recaudacionPDiaria, sala1, sala2, sala3,sala1M,sala1T, sala2M,sala2T,sala3M, sala3T);
         }
         else{
-            /*menuAdmin();*/
+            menuAdmin(clavesC,recaP,rutsC,cantidadPeliculas,nombresP,recaudacionP,recaudacionPDiaria,sala1,sala2,sala3,nombresC,apellidosC,cantidadClientes,saldosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados);
         }
     }
 
-    private static void menuUsuario(int cantidadPeliculas,int cantidadClientes, String rutCliente, int pos, String[] nombresC, String[] apellidosC, int[] saldosC, int[] estadosC, String[] peliculasDelCliente, String[] horarioDelCliente, String[] asientosDelCliente, int cantidadAsientosComprados,String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) {
+    private static void menuUsuario(String[] clavesC,int [] recaP,String[] rutsC,int cantidadPeliculas,int cantidadClientes, String rutCliente, int pos, String[] nombresC, String[] apellidosC, int[] saldosC, int[] estadosC, String[] peliculasDelCliente, String[] horarioDelCliente, String[] asientosDelCliente, int cantidadAsientosComprados,String[] nombreAJornadas, String[] nombresP, String[] tiposP, int[] recaudacionP, int[][] sala1, int[][] sala2, int[][] sala3, int[][] sala1M, int[][] sala1T, int[][] sala2M, int[][] sala2T, int[][] sala3M, int[][] sala3T) throws IOException {
         Scanner scan = new Scanner(System.in);
         despliegueMenuUsuario();
         System.out.println("Elija una opción: ");
@@ -471,23 +474,33 @@ public class Taller0_Araya_Ibacache {
                 desplegarEntradasUsuario(rutCliente,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados);
                 System.out.println("Ingrese la cantidad de asientos a reembolsar: ");
                 int cantAsientos = Integer.parseInt(scan.nextLine());
-                for (int i = 0; i < cantAsientos; i++) {
-                    System.out.println("Ingrese el nombre de la película: ");
-                    String pelicula = scan.nextLine();
-                    System.out.println("Ingrese la jornada de la función: ");
-                    String jornada = scan.nextLine();
-                    System.out.println("Ingrese número de sala de la función: ");
-                    int sala = Integer.parseInt(scan.nextLine()); 
-                    System.out.println("Ingrese la letra del asiento a devolver: ");
-                    String letra = scan.nextLine();
-                    System.out.println("Ingrese el número del asiento a devolver: ");
-                    int numero = Integer.parseInt(scan.nextLine());
-                    int exito = devolverBoleto(pos,saldosC,cantidadPeliculas,pelicula,jornada,sala,letra,numero,peliculasDelCliente,asientosDelCliente,horarioDelCliente,nombresP,cantidadAsientosComprados,recaudacionP,tiposP,movilidad,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T,nombreAJornadas);
-                    if (exito!=-1){
-                        //cantidadAsientosComprados--;
-                    }
-                        
+                if (cantAsientos>cantidadAsientosComprados){
+                    System.out.println("Usted no posee tantos asientos.");
                 }
+                else{
+                    for (int i = 0; i < cantAsientos; i++) {
+                        System.out.println("Ingrese el nombre de la película: ");
+                        String pelicula = scan.nextLine();
+                        System.out.println("Ingrese la jornada de la función: ");
+                        String jornada = scan.nextLine();
+                        System.out.println("Ingrese número de sala de la función: ");
+                        int sala = Integer.parseInt(scan.nextLine()); 
+                        System.out.println("Ingrese la letra del asiento a devolver: ");
+                        String letra = scan.nextLine();
+                        System.out.println("Ingrese el número del asiento a devolver: ");
+                        int numero = Integer.parseInt(scan.nextLine());
+                        int exito = devolverBoleto(pos,saldosC,cantidadPeliculas,pelicula,jornada,sala,letra,numero,peliculasDelCliente,asientosDelCliente,horarioDelCliente,nombresP,cantidadAsientosComprados,recaudacionP,tiposP,movilidad,sala1,sala2,sala3,sala1M,sala1T,sala2M,sala2T,sala3M,sala3T,nombreAJornadas);
+                        if (exito==-1){
+                            System.out.println("Ocurrió un problema");
+                        }
+                        else{
+                            cantidadAsientosComprados = exito;
+                            System.out.println("Boleto "+letra+" "+numero+" reembolsado.");
+                        }
+
+                    }
+                }
+                
             }
             if (opcion.equals("4")){
                 desplegarPeliculas(cantidadPeliculas, nombresP, tiposP, sala1, sala2, sala3, nombreAJornadas);
@@ -496,6 +509,7 @@ public class Taller0_Araya_Ibacache {
             System.out.println("Elija una opción nuevamente: ");
             opcion = scan.nextLine();
         }
+        salir(clavesC,cantidadClientes,nombresC, apellidosC,  rutCliente, rutsC, saldosC, estadosC,  cantidadPeliculas, tiposP,  recaudacionP,  nombresP, sala1,  sala2, sala3,  recaP);
     }
     /**
      * shows client menu
@@ -806,6 +820,10 @@ public class Taller0_Araya_Ibacache {
     }
 
     private static void desplegarInfoUsuario(int pos, String rutCliente, String[] nombresC, String[] apellidosC, int[] saldosC, String[] peliculasDelCliente, String[] horarioDelCliente, String[] asientosDelCliente, int cantidadAsientosComprados) {
+        if (pos==-1){
+            System.out.println("No existe el usuario");
+            return;
+        }
         System.out.println("Info de usuario: "+rutCliente);
         System.out.println("Nombre: "+nombresC[pos]+" "+apellidosC[pos]);
         System.out.println("Saldo: "+saldosC[pos]);
@@ -887,14 +905,17 @@ public class Taller0_Araya_Ibacache {
                         double aDevolver = ((valorEntrada(indexPelicula,tiposP))*0.85)*0.8;
                         recaudacionP[indexPelicula] -= aDevolver;
                         saldoC[pos]+=aDevolver;
+                        System.out.println("Reembolso: $"+aDevolver);
+                        cantidadAsientosComprados = eliminarDeLista(letra,numero,cantidadAsientosComprados,peliculasDelCliente,asientosDelCliente,horarioDelCliente);
                     }    
                     else{
                         double aDevolver = (valorEntrada(indexPelicula,tiposP))*0.8;
                         recaudacionP[indexPelicula] -= aDevolver;
                         saldoC[pos]+=aDevolver;
+                        System.out.println("Reembolso: $"+aDevolver);
+                        cantidadAsientosComprados = eliminarDeLista(letra,numero,cantidadAsientosComprados,peliculasDelCliente,asientosDelCliente,horarioDelCliente);
                     }
-                    
-                    return (cantidadAsientosComprados--);
+                    return (cantidadAsientosComprados);
                 }
             }
             else{
@@ -907,26 +928,149 @@ public class Taller0_Araya_Ibacache {
         return -1;
     }
     
-    public static int eliminarDeLista(String aeliminar,String[] lista, int cantidad,String[] peliculasDelCliente, String[] asientosDelCliente, String[] horarioDelCliente){
+    public static int eliminarDeLista(String letraAEliminar, int numeroAEliminar, int cantidad,String[] peliculasDelCliente, String[] asientosDelCliente, String[] horarioDelCliente){
 	int i; 
 	for(i=0; i< cantidad; i++){
-            if(lista[i]!=null) {
-                if (lista[i].equals(aeliminar)){
-                    break;
-                }
+            String[] partes = asientosDelCliente[i].split("-");
+            String letra = partes[0];
+            int numero = Integer.parseInt(partes[1]);
+            if (letra.equals(letraAEliminar) && numero==numeroAEliminar){
+                break;
             }
 	}
 	if(i == cantidad){
             return -1;
 	}
-	else { 
-            for(int j=i; j<cantidad - 1;j++){
-                    lista[j] = lista[j+1]; 
+	else {
+            if (cantidad==1){
+                horarioDelCliente[0]=horarioDelCliente[1];
+                asientosDelCliente[0]=asientosDelCliente[1];
+                peliculasDelCliente[0]=peliculasDelCliente[1];
+            }
+            else{
+                System.out.println("Cantidad 2 o más");
+                for(int j=i; j<cantidad - 1;j++){
+                    horarioDelCliente[j] = horarioDelCliente[j+1]; 
+                    asientosDelCliente[j] = asientosDelCliente[j+1]; 
+                    peliculasDelCliente[j] = peliculasDelCliente[j+1]; 
+                }
             }
             cantidad--;
             return cantidad;
 	}
 }
 
-}  
-  
+    private static void menuAdmin(String[] clavesC,int[] recaP,String[] rutC,int cantidadPeliculas, String[] nombresP, int[] recaudacionP, int[] recaudacionPDiaria, int[][] sala1, int[][] sala2, int[][] sala3, String[] nombresC, String[] apellidosC, int cantidadClientes, int[] saldosC, String[] peliculasDelCliente, String[] horarioDelCliente, String[] asientosDelCliente, int cantidadAsientosComprados) throws IOException {
+        Scanner scan = new Scanner(System.in);
+        despliegueMenuAdmin();
+        System.out.println("Elija una opción: ");
+        String opcion = scan.nextLine();
+        while(!opcion.equals("3")){
+            if (opcion.equals("1")){
+                taquilla(cantidadPeliculas,nombresP,recaudacionP,recaudacionPDiaria,sala1,sala2,sala3);
+            }
+            if (opcion.equals("2")){
+                //Información de usuario
+                System.out.println("Ingrese el rut del cliente: ");
+                String rut =  scan.nextLine();
+                String rutCliente = formatearRut(rut);
+                int pos = buscarRut(nombresC, rutCliente, cantidadClientes);
+                desplegarInfoUsuario(pos,rutCliente,nombresC,apellidosC,saldosC,peliculasDelCliente,horarioDelCliente,asientosDelCliente,cantidadAsientosComprados);
+            }
+            despliegueMenuAdmin();
+            System.out.println("Elija una opción: ");
+            opcion = scan.nextLine();
+        }
+        salir(rutC, cantidadClientes, nombresC, apellidosC, opcion, rutC, saldosC, saldosC, cantidadPeliculas, nombresP, recaudacionP, nombresP, sala1, sala2, sala3, recaP);
+    }
+
+    private static void despliegueMenuAdmin() {
+        System.out.println("Menu Admin");
+        System.out.println("[1] Taquilla");
+        System.out.println("[2] Informacion cliente");
+        System.out.println("[3] Salir");
+    }
+
+    private static void taquilla(int cantidadPeliculas, String[] nombresP, int[] recaudacionP, int[] recaudacionPDiaria, int[][] sala1, int[][] sala2, int[][] sala3) {
+        int mañana = 0;
+        int tarde = 0;
+        for (int i = 0; i < cantidadPeliculas; i++) {
+            System.out.println(nombresP[i]);
+            System.out.println("-- Recaudación diaria: $"+recaudacionPDiaria[i]);
+            System.out.println("-- Recaudación total: $"+(recaudacionP[i]+recaudacionPDiaria[i]));
+            if (sala1[i][0]==1){
+                mañana+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+            if (sala2[i][0]==1){
+                mañana+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+            if (sala3[i][0]==1){
+                mañana+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+            if (sala1[i][1]==1){
+                tarde+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+            if (sala2[i][1]==1){
+                tarde+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+            if (sala3[i][1]==1){
+                tarde+=(recaudacionP[i]+recaudacionPDiaria[i]);
+            }
+        }
+        System.out.println("Recaudación de la jornada Mañana: $"+mañana);
+        System.out.println("Recaudación de la jornada Tarde: $"+tarde);
+    }
+
+    private static void salir(String[] pass,int cantC,String[] nombresC, String[] apellidosC, String rutCliente, String[] rutsC, int[] saldosC, int[] estadosC, int cantidadPeliculas, String[] tiposP, int[] recaudacionP, String[] nombresP, int[][] sala1, int[][] sala2, int[][] sala3, int[] recaP) throws IOException {
+        String arch1 = "peliculas.txt";
+        FileWriter file = new FileWriter(arch1);
+        PrintWriter escritura = new PrintWriter(file);
+        for (int i = 0; i < cantidadPeliculas; i++) {
+            String text = nombresP[i]+","+tiposP[i]+","+pass[i]+","+(recaP[i]+recaudacionP[i]);
+            if (sala1[i][0]==1){
+                text+=",1,M";
+            }
+            if (sala2[i][0]==1){
+                text+=",2,M";
+            }
+            if (sala3[i][0]==1){
+                text+=",3,M";
+            }
+            if (sala1[i][1]==1){
+                text+=",1,T";
+            }
+            if (sala2[i][1]==1){
+                text+=",2,T";
+            }
+            if (sala3[i][1]==1){
+                text+=",3,T";
+            }
+            escritura.println(text);
+        }
+        file.close();
+        escritura.close();
+        String arch2 = "clientes.txt";
+        String arch3 = "status.txt";
+        file = new FileWriter(arch2);
+        escritura = new PrintWriter(file);
+        FileWriter file2 = new FileWriter(arch3);
+        PrintWriter escritura2 = new PrintWriter(file2);
+        for (int i = 0; i < cantC; i++) {
+            String text1 = "";
+            String text2 = "";
+            text1 = nombresC[i]+","+apellidosC[i]+","+rutsC[i]+","+saldosC[i];
+            if (estadosC[i]==1){
+                text2 = rutsC[i]+",HABILITADO";
+            }
+            else{
+                text2 = rutsC[i]+",NO HABILITADO";
+            }
+            escritura.println(text1);
+            escritura2.println(text2);
+        }
+        file.close();
+        escritura.close();
+        file2.close();
+        escritura2.close();
+    }
+}
