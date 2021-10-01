@@ -55,7 +55,6 @@ public class Taller0_Araya_Ibacache {
         int [][] sala3M = new int[10][30];
         int [][] sala3T = new int[10][30];
         rellenarMatriz(sala1M,sala1T,sala2M,sala2T,sala3M,sala3T);
-        System.out.println(mostrarMatrizAsientos(sala2M, "2", "M"));
         
         //Lectura
         int cantidadClientes = lecturaDatosClientes(nombresC,apellidosC,rutsC,clavesC,saldosC,estadosC);
@@ -1073,4 +1072,4 @@ public class Taller0_Araya_Ibacache {
         file2.close();
         escritura2.close();
     }
-}
+}  
